@@ -1,35 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [response, setResponse] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: query }]
+      })
+    });
+
+    const data = await res.json();
+    setResponse(data.choices?.[0]?.message?.content || 'No response');
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="overlay">
+      <form onSubmit={handleSubmit}>
+        <textarea value={query} onChange={e => setQuery(e.target.value)} placeholder="Ask ChatGPT..." />
+        <button type="submit">Send</button>
+      </form>
+      <div className="response">{response}</div>
+    </div>
+  );
 }
-
-export default App
